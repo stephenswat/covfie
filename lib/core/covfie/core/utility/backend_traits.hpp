@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include <variant>
 #include <cstddef>
 
 namespace covfie::utility {
@@ -30,6 +31,7 @@ struct nth_backend<B, 0, true> {
 
 template <typename B, std::size_t N>
 struct nth_backend<B, N, true> {
+    using type = std::monostate;
 };
 
 template <typename B, bool = B::is_initial>
