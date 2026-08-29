@@ -389,7 +389,7 @@ struct cuda_texture {
             }
 
             if constexpr (_output_vector_t::size == 1) {
-                return {r.x};
+                return {r};
             } else if constexpr (_output_vector_t::size == 2) {
                 return {r.x, r.y};
             } else if constexpr (_output_vector_t::size == 3) {
