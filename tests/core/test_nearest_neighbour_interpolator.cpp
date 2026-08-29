@@ -158,3 +158,29 @@ TEST(TestNearestNeighbourInterpolator, Identity3Nto3F)
     EXPECT_EQ(fv.at(-25.74f, -60.98f, -41.86f)[1], -61);
     EXPECT_EQ(fv.at(-25.74f, -60.98f, -41.86f)[2], -42);
 }
+
+TEST(TestNearestNeighbourInterpolator, Identity1Nto1D)
+{
+    using field_t = covfie::field<covfie::backend::nearest_neighbour<
+        covfie::backend::identity<covfie::vector::int1>,
+        covfie::vector::double1>>;
+
+    field_t f(covfie::make_parameter_pack(
+        field_t::backend_t::configuration_t({}),
+        field_t::backend_t::backend_t::configuration_t({})
+    ));
+    field_t::view_t fv(f);
+
+    EXPECT_EQ(fv.at(5.4)[0], 5);
+    EXPECT_EQ(fv.at(5.6)[0], 6);
+    EXPECT_EQ(fv.at(-1.51)[0], -2);
+
+    /*
+     * These coordinates lie just below a half-way point in double
+     * precision, but round up to it in single precision. They therefore
+     * catch a lookup which narrows the coordinate to a float first.
+     */
+    EXPECT_EQ(fv.at(3.4999999999999996)[0], 3);
+    EXPECT_EQ(fv.at(5.499999999999999)[0], 5);
+    EXPECT_EQ(fv.at(-3.4999999999999996)[0], -3);
+}
