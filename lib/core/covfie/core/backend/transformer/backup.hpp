@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <cassert>
 #include <iostream>
 #include <type_traits>
 #include <variant>
@@ -88,16 +89,21 @@ struct backup {
                          dimensions>>) explicit owning_data_t(Args... args)
             : m_backend(std::forward<Args>(args)...)
         {
-            m_min.fill(static_cast<typename contravariant_input_t::scalar_t>(0)
-            );
-
             for (std::size_t i = 0; i < contravariant_input_t::dimensions; ++i)
             {
-                m_max[i] = m_backend.get_configuration()[i];
+                m_min[i] =
+                    static_cast<typename contravariant_input_t::scalar_t>(0);
+                assert(m_backend.get_configuration()[i] > 0);
+                m_max[i] =
+                    static_cast<typename contravariant_input_t::scalar_t>(
+                        m_backend.get_configuration()[i] - 1
+                    );
             }
 
-            m_default.fill(static_cast<typename covariant_output_t::scalar_t>(0)
-            );
+            for (std::size_t i = 0; i < covariant_output_t::dimensions; ++i) {
+                m_default[i] =
+                    static_cast<typename covariant_output_t::scalar_t>(0);
+            }
         }
 
         typename backend_t::owning_data_t & get_backend(void)
