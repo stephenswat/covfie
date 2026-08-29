@@ -5,6 +5,7 @@
  */
 
 #include <cstddef>
+#include <sstream>
 #include <type_traits>
 
 #include <gtest/gtest.h>
@@ -92,4 +93,39 @@ TEST(TestMortonLayout, RoundTrip2DBmi2)
 TEST(TestMortonLayout, RoundTrip2DNaive)
 {
     check_round_trip<morton_naive_t>();
+}
+
+/*
+ * Serialize a Morton field and read it back. The sizes travel in the file
+ * alongside the data of the wrapped array.
+ */
+template <typename morton_t>
+void check_write_read()
+{
+    covfie::field<strided_t> s = make_strided_field();
+    covfie::field<morton_t> m(typename morton_t::owning_data_t(s.backend()));
+
+    std::stringstream ss;
+
+    m.dump(ss);
+
+    covfie::field<morton_t> nm(ss);
+    typename covfie::field<morton_t>::view_t nmv(nm);
+
+    for (std::size_t x = 0ul; x < 4ul; ++x) {
+        for (std::size_t y = 0ul; y < 4ul; ++y) {
+            EXPECT_EQ(nmv.at(x, y)[0], static_cast<float>(x));
+            EXPECT_EQ(nmv.at(x, y)[1], static_cast<float>(y));
+        }
+    }
+}
+
+TEST(TestMortonLayout, WriteRead2DBmi2)
+{
+    check_write_read<morton_bmi2_t>();
+}
+
+TEST(TestMortonLayout, WriteRead2DNaive)
+{
+    check_write_read<morton_naive_t>();
 }
