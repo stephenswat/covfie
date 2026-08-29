@@ -46,7 +46,7 @@ struct sycl_device_array {
         owning_data_t(::sycl::queue & queue)
             : m_size(0)
             , m_queue(queue)
-            , m_ptr({})
+            , m_ptr(nullptr, utility::sycl::device_deleter(queue))
         {
         }
 
@@ -55,8 +55,15 @@ struct sycl_device_array {
 
         owning_data_t & operator=(const owning_data_t & o)
         {
+            /*
+             * Self-assignment would otherwise allocate a new buffer and copy
+             * the old one into it for no gain.
+             */
+            if (this == &o) {
+                return *this;
+            }
+
             m_size = o.m_size;
-            m_ptr.reset();
             m_queue = o.m_queue;
             m_ptr =
                 utility::sycl::device_copy_d2d(o.m_ptr.get(), m_size, m_queue);
