@@ -177,10 +177,18 @@ struct sycl_device_array {
                 sizeof(std::decay_t<decltype(o.m_size)>)
             );
 
+            /*
+             * The data lives in device memory, which the host cannot read
+             * directly, so we stage it back to the host before we write it.
+             */
+            ::sycl::queue queue = o.m_queue;
+            std::unique_ptr<vector_t[]> host =
+                utility::sycl::device_copy_d2h(o.m_ptr.get(), o.m_size, queue);
+
             for (std::size_t i = 0; i < o.m_size; ++i) {
                 for (std::size_t j = 0; j < _output_vector_t::size; ++j) {
                     fs.write(
-                        reinterpret_cast<const char *>(&o.m_ptr[i][j]),
+                        reinterpret_cast<const char *>(&host[i][j]),
                         sizeof(typename _output_vector_t::type)
                     );
                 }

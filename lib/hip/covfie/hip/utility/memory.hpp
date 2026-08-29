@@ -145,4 +145,33 @@ unique_device_ptr<T[]> device_copy_d2d(
 
     return r;
 }
+
+template <typename T>
+std::unique_ptr<T[]> device_copy_d2h(
+    const T * d, std::size_t n, std::optional<hipStream_t> stream = std::nullopt
+)
+{
+    std::unique_ptr<T[]> r = std::make_unique<T[]>(n);
+
+    if (stream.has_value()) {
+        hipErrorCheck(hipMemcpyAsync(
+            r.get(),
+            d,
+            n * sizeof(std::remove_extent_t<T>),
+            hipMemcpyDeviceToHost,
+            *stream
+        ));
+        hipErrorCheck(hipStreamSynchronize(*stream));
+    } else {
+        hipErrorCheck(hipMemcpy(
+            r.get(),
+            d,
+            n * sizeof(std::remove_extent_t<T>),
+            hipMemcpyDeviceToHost
+        ));
+    }
+
+    return r;
+}
+
 }

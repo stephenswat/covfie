@@ -86,7 +86,7 @@ struct covariant_cast {
 
         static void write_binary(std::ostream & fs, const owning_data_t & o)
         {
-            decltype(m_backend)::write_binary(fs, o);
+            decltype(m_backend)::write_binary(fs, o.m_backend);
         }
 
         typename backend_t::owning_data_t m_backend;
