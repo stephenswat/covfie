@@ -27,7 +27,7 @@ includes covfie, consider the following:
     project("my_application")
     find_package(covfie REQUIRED)
     add_executable(main main.cpp)
-    target_link_libraries(main PUBLIC covfie::covfie_core)
+    target_link_libraries(main PUBLIC covfie::core)
 
 In order for CMake to be able to find the necessary setup files, it must be
 instructed to look in the installation prefix chosen during :ref:`installation
