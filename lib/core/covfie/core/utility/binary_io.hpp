@@ -85,7 +85,7 @@ inline std::istream & read_io_header(std::istream & fs, uint32_t hdr)
         std::stringstream err;
         err << "Deserialization of covfie vector field due to non-matching "
                "backend header (should be 0x"
-            << std::hex << std::uppercase << hdr << ", but was 0x" << hdr1
+            << std::hex << std::uppercase << hdr << ", but was 0x" << hdr2
             << ")";
         throw std::runtime_error(err.str());
     }

@@ -4,13 +4,18 @@
  * SPDX-License-Identifier: MPL-2.0
  */
 
+#include <cstdint>
+#include <cstring>
 #include <fstream>
+#include <sstream>
 
 #include <boost/filesystem.hpp>
 #include <gtest/gtest.h>
 #include <tmp_file.hpp>
 
 #include <covfie/core/backend/primitive/array.hpp>
+#include <covfie/core/backend/transformer/dereference.hpp>
+#include <covfie/core/backend/transformer/strided.hpp>
 #include <covfie/core/field.hpp>
 
 TEST(TestBinaryIO, WriteRead1DSingleFloatBuilder)
@@ -186,3 +191,75 @@ TEST(TestBinaryIO, WriteRead1DSingleFloatBuilder)
 //     EXPECT_EQ(nfb.at_integral(2u, 3u, 3u)[0], 233.0f);
 //     EXPECT_EQ(nfb.at_integral(2u, 3u, 4u)[0], 234.0f);
 // }
+
+TEST(TestBinaryIO, WriteReadDereference2D)
+{
+    using field_t =
+        covfie::field<covfie::backend::dereference<covfie::backend::strided<
+            covfie::vector::size2,
+            covfie::backend::array<covfie::vector::float2>>>>;
+    using inner_field_t = covfie::field<typename field_t::backend_t::backend_t>;
+
+    inner_field_t inner(covfie::make_parameter_pack(
+        inner_field_t::backend_t::configuration_t{3ul, 4ul}
+    ));
+    inner_field_t::view_t inner_view(inner);
+
+    for (std::size_t x = 0ul; x < 3ul; ++x) {
+        for (std::size_t y = 0ul; y < 4ul; ++y) {
+            inner_view.at(x, y)[0] = static_cast<float>(x);
+            inner_view.at(x, y)[1] = static_cast<float>(y);
+        }
+    }
+
+    field_t f(field_t::storage_t(
+        field_t::backend_t::configuration_t{}, inner.backend()
+    ));
+
+    std::stringstream ss;
+
+    f.dump(ss);
+
+    field_t nf(ss);
+    field_t::view_t nfv(nf);
+
+    for (std::size_t x = 0ul; x < 3ul; ++x) {
+        for (std::size_t y = 0ul; y < 4ul; ++y) {
+            EXPECT_EQ(nfv.at(x, y)[0], static_cast<float>(x));
+            EXPECT_EQ(nfv.at(x, y)[1], static_cast<float>(y));
+        }
+    }
+}
+
+TEST(TestBinaryIO, ReadWrongBackendHeaderReportsItsValue)
+{
+    using field_t =
+        covfie::field<covfie::backend::array<covfie::vector::float1>>;
+
+    field_t f(covfie::make_parameter_pack(field_t::backend_t::configuration_t{
+        2ul}));
+
+    std::stringstream ss;
+
+    f.dump(ss);
+
+    /*
+     * The backend header is the second word of the stream. Corrupt it, and
+     * check that the error names the value that was actually found rather
+     * than the global header that preceded it.
+     */
+    std::string data = ss.str();
+    const std::uint32_t bad = 0xDEADBEEF;
+    std::memcpy(data.data() + sizeof(std::uint32_t), &bad, sizeof(bad));
+
+    std::stringstream bs(data);
+
+    try {
+        field_t nf(bs);
+        FAIL() << "Deserialization of a corrupt header must throw.";
+    } catch (const std::runtime_error & e) {
+        EXPECT_NE(std::string(e.what()).find("DEADBEEF"), std::string::npos)
+            << "Error message should report the header that was found: "
+            << e.what();
+    }
+}

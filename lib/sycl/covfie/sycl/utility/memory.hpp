@@ -83,4 +83,15 @@ device_copy_d2d(const T * h, std::size_t n, ::sycl::queue & queue)
 
     return r;
 }
+
+template <typename T>
+std::unique_ptr<T[]>
+device_copy_d2h(const T * d, std::size_t n, ::sycl::queue & queue)
+{
+    std::unique_ptr<T[]> r = std::make_unique<T[]>(n);
+
+    queue.memcpy(r.get(), d, n * sizeof(std::remove_extent_t<T>)).wait();
+
+    return r;
+}
 }
