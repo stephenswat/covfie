@@ -13,6 +13,7 @@ add_executable(
     test_constant_field.cpp
     test_transformer_affine.cpp
     test_transformer_clamp.cpp
+    test_transformer_backup.cpp
     test_binary_io.cpp
     test_identity_backend.cpp
     test_nearest_neighbour_interpolator.cpp
