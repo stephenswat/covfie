@@ -17,6 +17,7 @@ path = [
         "CITATION.cff",
         ".clang-format",
         ".gersemirc",
+        "gcovr.cfg",
         ".gitignore",
         ".pre-commit-config.yaml",
         ".readthedocs.yml",

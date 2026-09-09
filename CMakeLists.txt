@@ -24,6 +24,10 @@ option(COVFIE_PLATFORM_HIP "Enable building of HIP code.")
 
 option(COVFIE_FAIL_ON_WARNINGS "Treat compiler warnings as errors.")
 
+# Code coverage instrumentation. Use a Debug build with this option, because
+# the inlining done at higher optimisation levels makes the report inaccurate.
+option(COVFIE_BUILD_COVERAGE "Build with code coverage instrumentation.")
+
 # Make the CMake modules in the cmake/ directory visible to the project.
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
