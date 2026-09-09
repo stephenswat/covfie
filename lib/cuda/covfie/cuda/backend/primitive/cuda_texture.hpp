@@ -88,6 +88,25 @@ struct cuda_texture {
 
         owning_data_t & operator=(const owning_data_t & o)
         {
+            if (this == &o) {
+                return *this;
+            }
+
+            /*
+             * We are about to overwrite both handles, so we must release the
+             * ones that we currently hold first, exactly like the move
+             * assignment operator does.
+             */
+            if (m_tex.has_value()) {
+                cudaErrorCheck(cudaDestroyTextureObject(*m_tex));
+                m_tex.reset();
+            }
+
+            if (m_array != nullptr) {
+                cudaErrorCheck(cudaFreeArray(m_array));
+                m_array = nullptr;
+            }
+
             cudaChannelFormatDesc channelDesc =
                 cudaCreateChannelDesc<channel_t>();
 
@@ -142,6 +161,13 @@ struct cuda_texture {
                 texDesc.filterMode = cudaFilterModePoint;
             }
             texDesc.readMode = cudaReadModeElementType;
+
+            /*
+             * The optional must hold a value before we can hand its address
+             * to CUDA; otherwise we write into an inactive union member and
+             * the destructor never sees the texture object.
+             */
+            m_tex = cudaTextureObject_t{};
 
             cudaErrorCheck(
                 cudaCreateTextureObject(&(*m_tex), &resDesc, &texDesc, nullptr)
