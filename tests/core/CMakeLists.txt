@@ -28,6 +28,7 @@ add_executable(
     test_covariant_cast.cpp
     test_covariant_select.cpp
     test_hilbert_layout.cpp
+    test_morton_layout.cpp
 )
 
 # Ensure that the tests are linked against the required libraries.

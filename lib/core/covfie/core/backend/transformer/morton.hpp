@@ -80,7 +80,7 @@ template <
     concepts::field_backend _storage_t,
     bool use_bmi2 = true>
 struct morton {
-    using this_t = morton<_input_vector_t, _storage_t>;
+    using this_t = morton<_input_vector_t, _storage_t, use_bmi2>;
     static constexpr bool is_initial = false;
 
     using backend_t = _storage_t;
