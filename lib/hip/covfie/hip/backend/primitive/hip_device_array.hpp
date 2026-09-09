@@ -39,7 +39,7 @@ struct hip_device_array {
 
     using configuration_t = utility::nd_size<1>;
 
-    static constexpr uint32_t IO_MAGIC_HEADER = 0xAB110000;
+    static constexpr uint32_t IO_MAGIC_HEADER = 0xAB310000;
 
     struct owning_data_t {
         using parent_t = this_t;
@@ -90,7 +90,7 @@ struct hip_device_array {
         }
 
         explicit owning_data_t(parameter_pack<configuration_t> && args)
-            : owning_data_t(args.x[0], std::make_unique<vector_t[]>(m_size))
+            : owning_data_t(args.x[0], std::make_unique<vector_t[]>(args.x[0]))
         {
         }
 
@@ -105,7 +105,8 @@ struct hip_device_array {
             parameter_pack<configuration_t> && args, hipStream_t stream
         )
             : owning_data_t(
-                  args.x[0], utility::hip::device_allocate<vector_t[]>(m_size)
+                  args.x[0],
+                  utility::hip::device_allocate<vector_t[]>(args.x[0])
               )
         {
         }
