@@ -24,16 +24,28 @@ jobs:
         CXX_STANDARD:
           - 20
         COMPILER:
-          - NAME: "gcc"
-            CXX: "g++"
-          - NAME: "clang"
-            CXX: "clang++"
+          - NAME: "gcc13"
+            CXX: "g++-13"
+            PACKAGE: "g++-13"
+            CONTAINER: "ubuntu:24.04"
+          - NAME: "gcc16"
+            CXX: "g++-16"
+            PACKAGE: "g++-16"
+            CONTAINER: "ubuntu:26.04"
+          - NAME: "clang18"
+            CXX: "clang++-18"
+            PACKAGE: "clang-18"
+            CONTAINER: "ubuntu:24.04"
+          - NAME: "clang22"
+            CXX: "clang++-22"
+            PACKAGE: "clang-22"
+            CONTAINER: "ubuntu:26.04"
 
     name: "Linux/Core/${{ matrix.BUILD }}/${{ matrix.COMPILER.NAME }}/C++${{ matrix.CXX_STANDARD }}"
 
     runs-on: "ubuntu-latest"
 
-    container: ubuntu:24.04
+    container: ${{ matrix.COMPILER.CONTAINER }}
 
     steps:
     - uses: actions/checkout@v3
@@ -45,13 +57,17 @@ jobs:
         wget
         cmake
         libbenchmark-dev
-        g++
-        clang
+        ${{ matrix.COMPILER.PACKAGE }}
     - name: Install Google Test
       run: |
-        wget https://github.com/google/googletest/archive/refs/tags/v1.14.0.tar.gz
-        tar -xzvf v1.14.0.tar.gz
-        cmake -S googletest-1.14.0 -B gtest_build -DBUILD_GMOCK=Off -DCMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/.prefixes/gtest/
+        wget https://github.com/google/googletest/archive/refs/tags/v1.18.0.tar.gz
+        tar -xzvf v1.18.0.tar.gz
+        cmake \
+          -S googletest-1.18.0 \
+          -B gtest_build \
+          -DCMAKE_CXX_COMPILER=$(which ${{ matrix.COMPILER.CXX }}) \
+          -DBUILD_GMOCK=Off \
+          -DCMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/.prefixes/gtest/
         cmake --build gtest_build -- -j $(nproc)
         cmake --install gtest_build
     - name: Configure
@@ -79,7 +95,7 @@ jobs:
 
     runs-on: "ubuntu-latest"
 
-    container: ubuntu:24.04
+    container: ubuntu:26.04
 
     steps:
     - uses: actions/checkout@v3
@@ -138,10 +154,10 @@ jobs:
         CXX_STANDARD:
           - 20
         COMPILER:
-          - NAME: "gcc"
-            CXX: "g++"
+          - NAME: "gcc10"
+            CXX: "g++-10"
         CUDA_COMPILER:
-          - NAME: "nvcc"
+          - NAME: "nvcc12.6"
             CUDACC: "nvcc"
 
     name: "Linux/CUDA/${{ matrix.BUILD }}/${{ matrix.COMPILER.NAME }}+${{ matrix.CUDA_COMPILER.NAME }}/C++${{ matrix.CXX_STANDARD }}"
@@ -161,7 +177,6 @@ jobs:
         cmake
         libbenchmark-dev
         g++-10
-        clang
     - name: Install Google Test
       run: |
         wget https://github.com/google/googletest/archive/refs/tags/v1.14.0.tar.gz
@@ -173,7 +188,7 @@ jobs:
       run: cmake
         -DCMAKE_BUILD_TYPE=${{ matrix.BUILD }}
         -DCMAKE_CUDA_ARCHITECTURES=52
-        -DCMAKE_CUDA_HOST_COMPILER=$(which g++-10)
+        -DCMAKE_CUDA_HOST_COMPILER=$(which ${{ matrix.COMPILER.CXX }})
         -DCOVFIE_FAIL_ON_WARNINGS=TRUE
         -DCOVFIE_BUILD_TESTS=On
         -DCOVFIE_BUILD_EXAMPLES=On
@@ -201,10 +216,10 @@ jobs:
         CXX_STANDARD:
           - 20
         COMPILER:
-          - NAME: "gcc"
-            CXX: "g++"
+          - NAME: "gcc13"
+            CXX: "g++-13"
         HIP_COMPILER:
-          - NAME: "amdclang"
+          - NAME: "amdclang6.3.4"
             HIPCC: "amdclang++"
 
     name: "Linux/HIP/${{ matrix.BUILD }}/${{ matrix.COMPILER.NAME }}+${{ matrix.HIP_COMPILER.NAME }}/C++${{ matrix.CXX_STANDARD }}"
@@ -263,7 +278,7 @@ jobs:
         CXX_STANDARD:
           - 20
         COMPILER:
-          - NAME: "icpx"
+          - NAME: "icpx2025.0.2"
             CXX: "icpx"
 
     name: "Linux/SYCL/${{ matrix.BUILD }}/${{ matrix.COMPILER.NAME }}/C++${{ matrix.CXX_STANDARD }}"
