@@ -263,3 +263,39 @@ TEST(TestBinaryIO, ReadWrongBackendHeaderReportsItsValue)
             << e.what();
     }
 }
+
+TEST(TestBinaryIO, ReadWrongGlobalFooterReportsItsValue)
+{
+    using field_t =
+        covfie::field<covfie::backend::array<covfie::vector::float1>>;
+
+    field_t f(covfie::make_parameter_pack(field_t::backend_t::configuration_t{
+        2ul}));
+
+    std::stringstream ss;
+
+    f.dump(ss);
+
+    /*
+     * The global footer of the field is the second to last word of the
+     * stream. Corrupt it, and check that the error names it.
+     */
+    std::string data = ss.str();
+    const std::uint32_t bad = 0xFEEDFACE;
+    std::memcpy(
+        data.data() + data.size() - 2 * sizeof(std::uint32_t), &bad, sizeof(bad)
+    );
+
+    std::stringstream bs(data);
+
+    try {
+        field_t nf(bs);
+        FAIL() << "Deserialization of a corrupt footer must throw.";
+    } catch (const std::runtime_error & e) {
+        EXPECT_NE(std::string(e.what()).find("footer"), std::string::npos)
+            << e.what();
+        EXPECT_NE(std::string(e.what()).find("FEEDFACE"), std::string::npos)
+            << "Error message should report the footer that was found: "
+            << e.what();
+    }
+}

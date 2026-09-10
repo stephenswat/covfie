@@ -5,6 +5,7 @@
  */
 
 #include <cstddef>
+#include <sstream>
 
 #include <gtest/gtest.h>
 
@@ -46,6 +47,42 @@ TEST(TestHilbertLayout, RoundTrip2D)
     for (std::size_t x = 0; x < 4; ++x) {
         for (std::size_t y = 0; y < 4; ++y) {
             EXPECT_EQ(hv.at(x, y)[0], static_cast<float>(x * 4 + y));
+        }
+    }
+}
+
+TEST(TestHilbertLayout, WriteRead2D)
+{
+    using strided_t = covfie::field<covfie::backend::strided<
+        covfie::vector::size2,
+        covfie::backend::array<covfie::vector::float1>>>;
+    using hilbert_t = covfie::field<covfie::backend::hilbert<
+        covfie::vector::size2,
+        covfie::backend::array<covfie::vector::float1>>>;
+
+    strided_t src(covfie::make_parameter_pack(
+        strided_t::backend_t::configuration_t{4u, 4u}
+    ));
+    strided_t::view_t sv(src);
+
+    for (std::size_t x = 0; x < 4; ++x) {
+        for (std::size_t y = 0; y < 4; ++y) {
+            sv.at(x, y)[0] = static_cast<float>(x * 4 + y);
+        }
+    }
+
+    hilbert_t dst(src);
+
+    std::stringstream ss;
+
+    dst.dump(ss);
+
+    hilbert_t ndst(ss);
+    hilbert_t::view_t nhv(ndst);
+
+    for (std::size_t x = 0; x < 4; ++x) {
+        for (std::size_t y = 0; y < 4; ++y) {
+            EXPECT_EQ(nhv.at(x, y)[0], static_cast<float>(x * 4 + y));
         }
     }
 }

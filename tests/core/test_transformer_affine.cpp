@@ -5,6 +5,7 @@
  */
 
 #include <cstddef>
+#include <sstream>
 
 #include <gtest/gtest.h>
 
@@ -30,4 +31,44 @@ TEST(TestAffineTransformer, AffineConstant1Dto1D)
     for (float i = -10.f; i < 10.f; i += 1.f) {
         EXPECT_EQ(fv.at(i)[0], 5.f);
     }
+}
+
+TEST(TestAffineTransformer, WriteReadAffineConstant1Dto1D)
+{
+    using field_t = covfie::field<covfie::backend::affine<
+        covfie::backend::
+            constant<covfie::vector::float1, covfie::vector::float1>>>;
+
+    field_t f(covfie::make_parameter_pack(
+        field_t::backend_t::configuration_t(covfie::algebra::affine<1>(
+            covfie::array::array<covfie::array::array<float, 2>, 1>{{0.f, 5.f}}
+        )),
+        field_t::backend_t::backend_t::configuration_t({5.f})
+    ));
+
+    std::stringstream ss;
+
+    f.dump(ss);
+
+    field_t nf(ss);
+    field_t::view_t nfv(nf);
+
+    /*
+     * The transformation is stored in the file, so the deserialized field
+     * must agree with the original one everywhere.
+     */
+    field_t::view_t fv(f);
+
+    for (float i = -10.f; i < 10.f; i += 1.f) {
+        EXPECT_EQ(nfv.at(i)[0], fv.at(i)[0]);
+    }
+
+    EXPECT_EQ(
+        nf.backend().get_configuration()(0, 0),
+        f.backend().get_configuration()(0, 0)
+    );
+    EXPECT_EQ(
+        nf.backend().get_configuration()(0, 1),
+        f.backend().get_configuration()(0, 1)
+    );
 }

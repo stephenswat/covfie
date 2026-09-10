@@ -5,6 +5,7 @@
  */
 
 #include <cstddef>
+#include <sstream>
 
 #include <gtest/gtest.h>
 
@@ -89,5 +90,33 @@ TEST(TestTransformerBackup, OutOfRangeLookupGivesDefault)
         EXPECT_EQ(fv.at(4ul, i)[1], 0.f);
         EXPECT_EQ(fv.at(i, 4ul)[0], 0.f);
         EXPECT_EQ(fv.at(i, 4ul)[1], 0.f);
+    }
+}
+
+TEST(TestTransformerBackup, WriteRead)
+{
+    field_t f = make_field();
+
+    std::stringstream ss;
+
+    f.dump(ss);
+
+    field_t nf(ss);
+    field_t::view_t nfv(nf);
+
+    /*
+     * The bounds and the default value are stored in the file, so the
+     * deserialized field must guard its range in the same way.
+     */
+    for (std::size_t x = 0ul; x < 4ul; ++x) {
+        for (std::size_t y = 0ul; y < 4ul; ++y) {
+            EXPECT_EQ(nfv.at(x, y)[0], static_cast<float>(x));
+            EXPECT_EQ(nfv.at(x, y)[1], static_cast<float>(y));
+        }
+    }
+
+    for (std::size_t i = 0ul; i < 5ul; ++i) {
+        EXPECT_EQ(nfv.at(4ul, i)[0], 0.f);
+        EXPECT_EQ(nfv.at(i, 4ul)[1], 0.f);
     }
 }
