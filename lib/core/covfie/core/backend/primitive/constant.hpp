@@ -66,7 +66,7 @@ struct constant {
             utility::read_io_header(fs, IO_MAGIC_HEADER);
 
             auto vec =
-                utility::read_binary<typename covariant_output_t::vector_t>();
+                utility::read_binary<typename covariant_output_t::vector_t>(fs);
 
             utility::read_io_footer(fs, IO_MAGIC_HEADER);
 
